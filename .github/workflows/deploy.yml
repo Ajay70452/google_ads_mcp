@@ -1,0 +1,27 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ubuntu
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            set -e
+            cd ~/google_ads_mcp
+            git pull
+            docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
+            docker compose --env-file .env.prod -f docker-compose.prod.yml exec -T backend alembic upgrade head
+            sleep 5
+            curl -fs http://localhost:8001/health

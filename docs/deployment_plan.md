@@ -223,8 +223,8 @@ exit  # log back in for group change to take effect
 
 # Clone repo
 ssh -i methodpro.pem ubuntu@<elastic-ip>
-git clone https://github.com/methodpro/ga_auto.git
-cd ga_auto
+git clone https://github.com/Ajay70452/google_ads_mcp.git
+cd google_ads_mcp
 
 # Create .env.prod (paste contents from your password manager)
 nano .env.prod
@@ -319,7 +319,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            cd ~/ga_auto
+            cd ~/google_ads_mcp
             git pull
             docker compose -f docker-compose.prod.yml up -d --build
             docker compose -f docker-compose.prod.yml exec -T backend alembic upgrade head
@@ -368,7 +368,7 @@ Daily `pg_dump` to S3:
 crontab -e
 
 # Add:
-0 3 * * * cd ~/ga_auto && docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U ga_user ga_auto | gzip | aws s3 cp - s3://methodpro-ga-backups/$(date +\%Y-\%m-\%d).sql.gz
+0 3 * * * cd ~/google_ads_mcp && docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U ga_user ga_auto | gzip | aws s3 cp - s3://methodpro-ga-backups/$(date +\%Y-\%m-\%d).sql.gz
 ```
 
 Keep 30 days of backups (S3 lifecycle rule). Cost: pennies.
@@ -452,7 +452,7 @@ If usage grows (>50 client accounts, write tools used heavily), promote to:
 
 ```bash
 ssh ubuntu@<elastic-ip>
-cd ~/ga_auto
+cd ~/google_ads_mcp
 git log --oneline -5      # find the last good commit
 git checkout <good-sha>
 docker compose -f docker-compose.prod.yml up -d --build

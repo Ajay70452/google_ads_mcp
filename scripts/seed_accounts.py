@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from sqlalchemy import text
-from sqlalchemy.dialects.postgresql import insert
 
 load_dotenv()
 
@@ -25,7 +24,6 @@ async def seed():
 
     async with engine.begin() as conn:
         for acc in accounts:
-            stmt = insert(text.__class__).values()  # use raw upsert below
             await conn.execute(
                 text("""
                     INSERT INTO client_accounts (customer_id, name, is_active, created_at)

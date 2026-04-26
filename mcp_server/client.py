@@ -30,3 +30,22 @@ async def get(path: str, params: dict = None) -> dict:
 
 async def post(path: str, body: dict) -> dict:
     return await call_backend("POST", path, json=body)
+
+
+async def get_bytes(path: str, params: dict = None) -> bytes:
+    """Fetch a binary response (e.g. xlsx download)."""
+    async with httpx.AsyncClient(base_url=BACKEND_URL, timeout=TIMEOUT) as client:
+        for attempt in range(3):
+            try:
+                response = await client.request("GET", path, params=params)
+                response.raise_for_status()
+                return response.content
+            except httpx.HTTPStatusError as e:
+                try:
+                    detail = e.response.json().get("detail", str(e))
+                except Exception:
+                    detail = e.response.text or str(e)
+                raise RuntimeError(f"Backend error {e.response.status_code}: {detail}")
+            except httpx.TransportError as e:
+                if attempt == 2:
+                    raise RuntimeError(f"Backend unreachable after 3 attempts: {e}")

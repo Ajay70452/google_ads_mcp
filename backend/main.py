@@ -8,8 +8,10 @@ from datetime import date
 import redis.asyncio as aioredis
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Query, Depends
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
+
+from backend.reports.ytd_excel import build_ytd_workbook
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -168,8 +170,7 @@ async def all_accounts_summary(
 
 # ── YTD report ────────────────────────────────────────────────────────────────────
 
-@app.get("/reports/ytd")
-async def ytd_report(year: int = Query(default=None), refresh: bool = False):
+async def _build_ytd_report(year: int | None, refresh: bool) -> dict:
     if year is None:
         year = date.today().year
 
@@ -205,7 +206,6 @@ async def ytd_report(year: int = Query(default=None), refresh: bool = False):
             "months": monthly_rows,
         }
 
-    # Fetch all accounts concurrently in batches of 10
     results = []
     for i in range(0, len(accounts), 10):
         batch = accounts[i:i + 10]
@@ -214,6 +214,23 @@ async def ytd_report(year: int = Query(default=None), refresh: bool = False):
 
     results.sort(key=lambda x: x["account_name"])
     return {"year": year, "accounts": results}
+
+
+@app.get("/reports/ytd")
+async def ytd_report(year: int = Query(default=None), refresh: bool = False):
+    return await _build_ytd_report(year, refresh)
+
+
+@app.get("/reports/ytd/excel")
+async def ytd_report_excel(year: int = Query(default=None), refresh: bool = False):
+    report = await _build_ytd_report(year, refresh)
+    xlsx_bytes = build_ytd_workbook(report)
+    filename = f"ytd_report_{report['year']}.xlsx"
+    return Response(
+        content=xlsx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 # ── Campaign routes ───────────────────────────────────────────────────────────────

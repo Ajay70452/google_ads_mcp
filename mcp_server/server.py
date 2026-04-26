@@ -1,5 +1,8 @@
 """MCP server — stdio transport, delegates all logic to FastAPI backend."""
 import asyncio
+from datetime import datetime
+from pathlib import Path
+
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp import types
@@ -87,6 +90,29 @@ async def list_tools() -> list[types.Tool]:
                         "type": "integer",
                         "description": "Year to report on. Defaults to current year (2026).",
                         "default": 2026,
+                    },
+                    "refresh": {
+                        "type": "boolean",
+                        "description": "Bypass cache and fetch fresh data from Google Ads.",
+                        "default": False,
+                    },
+                },
+                "required": [],
+            },
+        ),
+        types.Tool(
+            name="download_ytd_report",
+            description=(
+                "Download the year-to-date performance report as an Excel (.xlsx) file. "
+                "Saves the workbook to the user's Downloads folder and returns the local file path. "
+                "Use this when the user asks to download, export, or save the YTD report as Excel/spreadsheet."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "year": {
+                        "type": "integer",
+                        "description": "Year to report on. Defaults to current year.",
                     },
                     "refresh": {
                         "type": "boolean",
@@ -350,6 +376,13 @@ async def _dispatch(name: str, args: dict) -> str:
         )
         return _fmt_ytd_report(result)
 
+    elif name == "download_ytd_report":
+        params = {"refresh": args.get("refresh", False)}
+        if args.get("year") is not None:
+            params["year"] = args["year"]
+        xlsx_bytes = await backend.get_bytes("/reports/ytd/excel", params=params)
+        return _save_ytd_excel(xlsx_bytes, params.get("year"))
+
     elif name == "get_search_term_report":
         result = await backend.get(
             f"/accounts/{args['customer_id']}/search-terms",
@@ -441,6 +474,23 @@ async def _dispatch(name: str, args: dict) -> str:
 
 
 # ── Formatters ───────────────────────────────────────────────────────────────────
+
+def _save_ytd_excel(content: bytes, year: int | None) -> str:
+    downloads = Path.home() / "Downloads"
+    target_dir = downloads if downloads.is_dir() else Path.home()
+    year_part = year if year is not None else datetime.now().year
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    path = target_dir / f"ytd_report_{year_part}_{timestamp}.xlsx"
+    path.write_bytes(content)
+    size_kb = len(content) / 1024
+    return (
+        f"**YTD Report Downloaded**\n"
+        f"- Saved to: `{path}`\n"
+        f"- Size: {size_kb:,.1f} KB\n"
+        f"- Year: {year_part}\n\n"
+        f"Open it from your Downloads folder."
+    )
+
 
 def _fmt_account_summary(d: dict) -> str:
     if "message" in d:

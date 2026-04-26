@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose:*)",
+      "Bash(alembic upgrade:*)",
+      "Bash(python -c \":*)",
+      "Bash(pip install:*)",
+      "WebFetch(domain:developers.google.com)",
+      "WebSearch",
+      "WebFetch(domain:groups.google.com)",
+      "WebFetch(domain:ads-developers.googleblog.com)",
+      "Bash(python -m json.tool)",
+      "Bash(.venv/Scripts/python.exe -c ' *)",
+      "Bash(.venv/Scripts/python.exe -c \"from backend.google_ads.auth import list_accessible_customers; ids = list_accessible_customers\\(\\); print\\('OK, accessible customers:', ids\\)\")"
+    ]
+  }
+}

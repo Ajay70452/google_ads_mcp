@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "google-ads": {
+      "command": "F:/Projects/ga_auto/.venv/Scripts/python.exe",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "F:/Projects/ga_auto",
+      "env": {
+        "BACKEND_URL": "http://localhost:8001",
+        "PYTHONPATH": "F:/Projects/ga_auto"
+      }
+    }
+  }
+}

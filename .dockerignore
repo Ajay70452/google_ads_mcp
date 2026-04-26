@@ -1,0 +1,53 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# Virtual environments
+.venv
+venv
+env
+
+# Local secrets and config
+.env
+.env.local
+.env.dev
+*.pem
+client_secret*.json
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Build artefacts
+build
+dist
+*.egg-info
+
+# Documentation (not needed in image)
+docs
+*.md
+!alembic/README.md
+
+# Tests (not needed in production image)
+tests
+test_*.py
+
+# Tool-specific
+.claude
+claude_desktop_config.json

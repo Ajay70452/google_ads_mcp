@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe -c \"import sqlalchemy; print\\('sqlalchemy ok'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import google.ads.googleads; print\\('google-ads ok'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c \"import mcp; print\\('mcp ok'\\)\")",
+      "Bash(.venv/Scripts/python.exe -c ':*)",
+      "Bash(.venv/Scripts/uvicorn backend.main:app --reload)",
+      "Read(//c/Users/Hp/AppData/Roaming/Claude/**)",
+      "Bash(.venv/Scripts/python.exe -c \" import json, sys cfg = json.load\\(sys.stdin\\) cfg['mcpServers']['google-ads']['env']['BACKEND_URL'] = 'http://localhost:8001' print\\(json.dumps\\(cfg, indent=2\\)\\) \")",
+      "Bash(cp /tmp/cfg_new.json \"C:/Users/Hp/AppData/Roaming/Claude/claude_desktop_config.json\")"
+    ]
+  }
+}

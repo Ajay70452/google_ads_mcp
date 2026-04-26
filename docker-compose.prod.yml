@@ -1,0 +1,87 @@
+# Production-ish stack for the demo deployment.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Differences from the local docker-compose.yml:
+#   - Builds the app image (Dockerfile at repo root) and runs both backend + scheduler from it
+#   - Postgres / Redis are NOT exposed to the host (only reachable on the docker network)
+#   - All services use `restart: always` so a server reboot brings everything back
+#   - Backend exposes port 8001 directly (no Caddy yet — see deployment_plan.md §3.4)
+
+services:
+  backend:
+    build: .
+    image: ga_auto:latest
+    restart: always
+    env_file: .env.prod
+    ports:
+      - "8001:8001"   # demo: public; switch to "127.0.0.1:8001:8001" once Caddy is added
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  scheduler:
+    build: .
+    image: ga_auto:latest    # reuse the backend image — same code, different CMD
+    restart: always
+    env_file: .env.prod
+    command: ["python", "-m", "agents.scheduler"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    # No HTTP healthcheck — APScheduler doesn't expose one
+    healthcheck:
+      disable: true
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: ga_auto
+      POSTGRES_USER: ga_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ga_user -d ga_auto"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:
+  redisdata:

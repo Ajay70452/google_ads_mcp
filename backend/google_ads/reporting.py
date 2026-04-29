@@ -29,8 +29,16 @@ def cache_key(customer_id: str, query_type: str, params: dict) -> str:
 
 # ── Account / MCC helpers ───────────────────────────────────────────────────────
 
+EXCLUDED_NAME_KEYWORDS = ("meta",)
+
+
 def list_child_accounts(client: GoogleAdsClient) -> list[dict]:
-    """Return all active non-manager accounts under the MCC."""
+    """Return all active non-manager accounts under the MCC.
+
+    Meta-tagged accounts are excluded — this MCC is Google-Ads-only;
+    Meta entries come from cross-platform tracking and shouldn't appear
+    in reports.
+    """
     mcc_id = os.environ["MCC_CUSTOMER_ID"]
     ga_service = client.get_service("GoogleAdsService")
     gaql = """
@@ -43,12 +51,16 @@ def list_child_accounts(client: GoogleAdsClient) -> list[dict]:
           AND customer_client.manager = FALSE
     """
     response = ga_service.search(customer_id=mcc_id, query=gaql)
-    return [
+    accounts = [
         {
             "customer_id": str(row.customer_client.id),
             "name": row.customer_client.descriptive_name,
         }
         for row in response
+    ]
+    return [
+        a for a in accounts
+        if not any(kw in a["name"].lower() for kw in EXCLUDED_NAME_KEYWORDS)
     ]
 
 

@@ -12,6 +12,9 @@
       "Bash(python -m json.tool)",
       "Bash(.venv/Scripts/python.exe -c ' *)",
       "Bash(.venv/Scripts/python.exe -c \"from backend.google_ads.auth import list_accessible_customers; ids = list_accessible_customers\\(\\); print\\('OK, accessible customers:', ids\\)\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Hp\\AppData\\Roaming\\Claude"
     ]
   }
 }

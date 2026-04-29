@@ -79,9 +79,11 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="generate_ytd_report",
             description=(
-                "Generate the full year-to-date performance report across ALL client accounts. "
-                "Shows one row per account per month: Clicks, Impressions, CTR, Conversions, "
-                "Cost, Conversion Rate, and CPL. Current month is marked as in-progress."
+                "Generate the full year-to-date performance report across ALL client accounts "
+                "as ONE single combined table. Do not split, summarize, or rewrite the output. "
+                "Show the table exactly as returned — one row per account per month with "
+                "Clicks, Impressions, CTR, Conversions, Cost, Conversion Rate, and CPL. "
+                "Current month is marked as in-progress."
             ),
             inputSchema={
                 "type": "object",
@@ -533,35 +535,34 @@ def _fmt_ytd_report(data: dict) -> str:
     if not accounts:
         return "No accounts found."
 
-    lines = [f"YTD Performance Report — {year}\n"]
-    sep = "=" * 100
+    lines = [
+        f"# YTD Performance Report — {year}",
+        "",
+        "Single combined report for all client accounts. One row per account per month.",
+        "",
+        "| Account | Month | Clicks | Impressions | CTR | Conversions | Cost | Conv. Rate | CPL |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
 
     for account in accounts:
-        lines.append(sep)
-        lines.append(account["account_name"].upper())
-        lines.append("-" * 100)
-        lines.append(
-            f"{'Month':<18} {'Clicks':>7} {'Impr.':>9} {'CTR':>7} "
-            f"{'Conv.':>7} {'Cost':>11} {'Conv%':>7} {'CPL':>10}"
-        )
-        lines.append("-" * 100)
-
+        name = account["account_name"]
         for row in account["months"]:
-            month_label = row["month"] + (" *" if row["is_current"] else "  ")
-            cpl = f"${row['cpl']:,.2f}" if row["cpl"] is not None else "-"
+            month_label = row["month"] + (" *" if row["is_current"] else "")
+            cpl = f"${row['cpl']:,.2f}" if row["cpl"] is not None else "—"
             lines.append(
-                f"{month_label:<18} "
-                f"{row['clicks']:>7,} "
-                f"{row['impressions']:>9,} "
-                f"{row['ctr']:>6.2f}% "
-                f"{row['conversions']:>7.2f} "
-                f"${row['cost']:>10,.2f} "
-                f"{row['conv_rate']:>6.2f}% "
-                f"{cpl:>10}"
+                f"| {name} "
+                f"| {month_label} "
+                f"| {row['clicks']:,} "
+                f"| {row['impressions']:,} "
+                f"| {row['ctr']:.2f}% "
+                f"| {row['conversions']:.2f} "
+                f"| ${row['cost']:,.2f} "
+                f"| {row['conv_rate']:.2f}% "
+                f"| {cpl} |"
             )
 
-    lines.append(sep)
-    lines.append("* = current month (data in progress)")
+    lines.append("")
+    lines.append("`*` = current month (data in progress)")
     return "\n".join(lines)
 
 

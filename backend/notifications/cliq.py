@@ -15,6 +15,9 @@ _BASE = f"https://cliq.zoho.com/company/{_COMPANY_ID}/api/v2/channelsbyname"
 CHANNEL_PACING = "pacingalerts"
 CHANNEL_PERFORMANCE = "performancealerts"
 CHANNEL_SEARCH_TERMS = "searchtermsreview"
+CHANNEL_FATIGUE = "fatiguealerts"
+CHANNEL_CREATIVE = "creativeperformance"
+CHANNEL_DIGEST = "weeklydigest"
 
 
 def send_cliq_alert(message: str, channel: str) -> bool:
